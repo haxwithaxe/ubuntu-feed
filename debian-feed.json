@@ -1,0 +1,10 @@
+{
+	"file_extension": ".torrent",
+	"rss_file": "/usr/local/var/cache/debian-feed/debian-feed.rss",
+	"archs": ["amd64"],
+	"types": ["bt-cd", "bt-dvd", "bt-hybrid"],
+	"sources": [
+		"https://cdimage.debian.org/cdimage/release/current-live/{arch}/{type_}/",
+		"https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/{arch}/{type_}/"
+	]
+}

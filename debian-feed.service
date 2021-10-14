@@ -1,0 +1,7 @@
+[Unit]
+Description=Debian Installer RSS Feed Generator
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/debian-feed.py /usr/local/etc/debian-feed.json
