@@ -4,4 +4,4 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/debian-feed.py /usr/local/etc/debian-feed.json
+ExecStart=/usr/local/bin/ubuntu-feed /usr/local/etc/ubuntu-feed.json

@@ -1,0 +1,7 @@
+{
+	"file_extension": ".torrent", 
+	"rss_file": "/path/to/ubuntu-feed.rss", 
+	"sources": [
+		"https://releases.ubuntu.com"
+	]
+}

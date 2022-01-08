@@ -1,35 +1,41 @@
 PREFIX ?= /usr/local
 
 
-install: $(PREFIX)/bin/debian-feed \
-	$(PREFIX)/lib/systemd/system/debian-feed.service \
-	$(PREFIX)/lib/systemd/system/debian-feed.timer \
-	systemctl enable debian-feed.timer
-	systemctl start debian-feed.timer
+install: $(PREFIX)/bin/ubuntu-feed \
+	$(PREFIX)/lib/systemd/system/ubuntu-feed.service \
+	$(PREFIX)/lib/systemd/system/ubuntu-feed.timer
+	systemctl enable ubuntu-feed.timer
+	systemctl start ubuntu-feed.timer
+
+install-debian-deps:
+	apt install python3-bs4 \
+		python3-feedgen \
+		python3-feedparser \
+		python3-lxml \
+		python3-requests
 
 uninstall:
-	systemctl stop debian-feed.timer
-	systemctl disable debian-feed.timer
-	systemctl stop debian-feed-boot.service
-	rm $(PREFIX)/bin/debian-feed \
-		$(PREFIX)/etc/debian-feed.json \
-		$(PREFIX)/lib/systemd/system/debian-feed.service \
-		$(PREFIX)/lib/systemd/system/debian-feed.timer
+	systemctl stop ubuntu-feed.timer
+	systemctl disable ubuntu-feed.timer
+	rm $(PREFIX)/bin/ubuntu-feed \
+		$(PREFIX)/etc/ubuntu-feed.json \
+		$(PREFIX)/lib/systemd/system/ubuntu-feed.service \
+		$(PREFIX)/lib/systemd/system/ubuntu-feed.timer
 
-$(PREFIX)/bin/debian-feed: $(PREFIX)/etc/debian-feed.json
-	cp debian-feed.py $(PREFIX)/bin/debian-feed
+$(PREFIX)/bin/ubuntu-feed: $(PREFIX)/etc/ubuntu-feed.json
+	cp ubuntu-feed.py $(PREFIX)/bin/ubuntu-feed
 
-$(PREFIX)/etc/debian-feed.json:
-	cp debian-feed.json $@
+$(PREFIX)/etc/ubuntu-feed.json:
+	cp ubuntu-feed.json $@
 
-$(PREFIX)/lib/systemd/system/debian-feed.timer: $(PREFIX)/lib/systemd/system
-	cp debian-feed.timer $(PREFIX)/lib/systemd/system/
+$(PREFIX)/lib/systemd/system/ubuntu-feed.timer: $(PREFIX)/lib/systemd/system
+	cp ubuntu-feed.timer $(PREFIX)/lib/systemd/system/
 
-$(PREFIX)/lib/systemd/system/debian-feed-boot.service: $(PREFIX)/lib/systemd/system
-	cp debian-feed-boot.service $(PREFIX)/lib/systemd/system/
+$(PREFIX)/lib/systemd/system/ubuntu-feed-boot.service: $(PREFIX)/lib/systemd/system
+	cp ubuntu-feed-boot.service $(PREFIX)/lib/systemd/system/
 
-$(PREFIX)/lib/systemd/system/debian-feed.service: $(PREFIX)/lib/systemd/system
-	cp debian-feed.service $(PREFIX)/lib/systemd/system/
+$(PREFIX)/lib/systemd/system/ubuntu-feed.service: $(PREFIX)/lib/systemd/system
+	cp ubuntu-feed.service $(PREFIX)/lib/systemd/system/
 
 $(PREFIX)/lib/systemd/system:
 	mkdir -p $(PREFIX)/lib/systemd/system

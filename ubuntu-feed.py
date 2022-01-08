@@ -2,13 +2,18 @@
 """Debian installer RSS feed generator."""
 
 import json
+import logging
 import os
+import re
 import sys
 
 import bs4
 from feedgen.feed import FeedGenerator
 import feedparser
 import requests
+
+
+log = logging.getLogger('debian-feed')
 
 
 def add_entry(feed, filename, url):
@@ -21,31 +26,61 @@ def add_entry(feed, filename, url):
     entry.link(href=file_url)
 
 
-def find_new_files(config, url):
-    """Find all the target files on the page at `url`."""
-    page = requests.get(url)
+def get_version_files(config, source, path):
+    if path.startswith('/'):
+        path.pop(0)
+    if source.endswith('/'):
+        source.pop(-1)
+    url = '{}/{}'.format(source, path)
+    page = _get_page(url)
+    if page is False:  # Got error from server, ignoring this url
+        return
+    if page is None:  # Error connecting, try again
+        page = _get_page(url)
+    if not page:  # Too many errors, skip to the next url
+        log.error('Failed to connect to the server for "%s" twice.', url)
+        return
     soup = bs4.BeautifulSoup(page.content, features='lxml')
-    for tr in soup.find_all('tr'):
-        try:
-            _, ext = os.path.splitext(tr.td.a.attrs.get('href', ''))
-        except AttributeError:
-            continue
-        if ext.strip('.') == config.get('file_extension').strip('.'):
-            yield tr.td.a.attrs['href']  # torrent filename
+    for a in soup.findAll('a'):
+        if a.attrs.get('href', '').endswith(config.get('file_extension')):
+            yield '{}/{}{}'.format(source, path, a.attrs['href'])
 
 
-def get_urls(config):
-    """Returns a generator of all the pages to scrape."""
-    for arch in config.get('archs'):
-        for type_ in config.get('types'):
-            for source in config.get('sources'):
-                yield source.format(arch=arch, type_=type_)
+def find_new_files(config, source):
+    page = _get_page(source)
+    if page is False:  # Got error from server, ignoring this url
+        return
+    if page is None:  # Error connecting, try again
+        page = _get_page(source)
+    if not page:  # Too many errors, skip to the next url
+        log.error('Failed to connect to the server for "%s" twice.', source)
+        return
+    soup = bs4.BeautifulSoup(page.content, features='lxml')
+    for a in soup.findAll('a'):
+        if (a.attrs.get('href') == a.text and
+                re.match(r'\d+\.\d+(\.\d+)?/', a.text)):
+            yield from get_version_files(config, source, a.attrs['href'])
+
+
+def _get_page(url):
+    log.debug('Getting %s', url)
+    try:
+        page = requests.get(url)
+    except requests.exceptions.ConnectionError as err:
+        # Warning since it's not fatal to the workflow unless it happens again.
+        log.warning('Error Connectiong to the server "%s": %s', url, err)
+        return None
+    if not page or not page.ok:
+        log.error('Could not get "%s" for this reason: %s', url, page.reason)
+        return False
+    log.debug('Got: %s %s', url, page.reason)
+    return page
 
 
 def _init_feed():
     feed = FeedGenerator()
-    feed.title('Debian Release Feed')
-    feed.description('A feed of Debian installer torrent files.')
+    feed.title('Ubuntu Release Feed')
+    feed.description('A feed of Ubuntu installer torrent files.')
     feed.link(href='http://localhost')
     return feed
 
@@ -73,14 +108,16 @@ def main(config):
     else:
         entries = []
         feed = _init_feed()
-    for url in get_urls(config):
+    for url in config['sources']:
         for torrent in find_new_files(config, url):
+            log.debug('Found torrent: %s', torrent)
             if os.path.join(url, torrent) not in entries:
                 add_entry(feed, torrent, url)
     feed.rss_file(config.get('rss_file'), pretty=True)
 
 
 if __name__ == '__main__':
+    log.setLevel(logging.ERROR)
     try:
         app_config = json.load(open(sys.argv[1], 'r'))
     except IndexError:

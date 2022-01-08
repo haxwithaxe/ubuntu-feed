@@ -1,0 +1,9 @@
+[Unit]
+Description=Ubuntu Installer RSS Feed Generator
+
+[Timer]
+OnUnitActiveSec=1d
+Unit=ubuntu-feed.service
+
+[Install]
+WantedBy=timers.target
