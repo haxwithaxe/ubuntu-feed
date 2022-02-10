@@ -5,7 +5,6 @@ install: $(PREFIX)/bin/ubuntu-feed \
 	$(PREFIX)/lib/systemd/system/ubuntu-feed.service \
 	$(PREFIX)/lib/systemd/system/ubuntu-feed.timer
 	systemctl enable ubuntu-feed.timer
-	systemctl start ubuntu-feed.timer
 
 install-debian-deps:
 	apt install python3-bs4 \
