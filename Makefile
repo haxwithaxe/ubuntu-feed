@@ -9,7 +9,7 @@ install: $(PREFIX)/bin/ubuntu-feed \
 
 install-debian-deps:
 	apt install python3-bs4 \
-		python3-feedgen \
+		python3-feedgenerator \
 		python3-feedparser \
 		python3-lxml \
 		python3-requests
